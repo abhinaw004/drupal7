@@ -1,0 +1,324 @@
+<?php
+function colour_set_menu() {
+  $items = array();
+
+  $items['input/examples'] = array( 
+    'title' => 'This is my frist example', 
+    'description' => 'I will store your information.',
+    'page callback' => 'drupal_get_form', 
+    'page arguments' => array('colour_set_simple_form'), 
+    'access callback' => TRUE
+  );
+  $items['input/views'] = array( 
+    'title' => 'This is my first fetching data', 
+    'description' => 'display data.',
+    'page callback' => 'colour_set_simple_view', 
+    'access callback' => TRUE
+  );
+  $items['input/del'] = array(
+		'title' => 'Delete Employee',
+		 'description' => 'display data.',
+		'page callback' => 'colour_set_simple_del',
+		'access callback' => TRUE
+		 
+	);                                                  
+
+  return $items;
+}
+
+
+function colour_set_simple_delete() {
+$getvalue = $_GET['q'];
+$param = explode('/',$getvalue);
+$slno = $param[2];
+//drupal_set_message($param);
+
+$sl_no_delete = db_delete('employee')
+-> condition ('sl_no',$slno)
+-> execute();
+drupal_goto('input/views',array());
+
+}  
+
+
+
+
+
+function colour_set_simple_form_update($form, &$form_state,$name) {
+$header = array('firstname','lastname','gender','address','designation');
+	$results = db_query("SELECT firstname,lastname,gender,address,designation FROM {employee}");
+	$rows = array();
+	foreach($results as $key) {
+		$firstname = $key->firstname;
+		$lastname = $key->lastname;
+		$gender = $key->gender;
+		$address = $key->address;
+		$designation = $key->designation;
+		
+	  $rows[] = array($firstname,lastname,gender,address,designation,"<a href='input/examples/{$key->sl_no}'>" . t('Edit') . "</a> | <a href='input/examples/{$key->sl_no}'>" . t('Delete') . "</a>");
+	}
+	return theme('table', array('header' => $header, 'rows' => $rows));
+}
+
+function colour_set_simple_form_submit($form, &$form_state) {
+
+             $firstname = $form_state['values']['firstname'];
+	     $lastname = $form_state['values']['lastname'];
+             $gender = $form_state['values']['gender'];
+             $address = $form_state['values']['address'];
+             $designation = $form_state['values']['designation'];
+             $sl_no = $form_state['values']['sl_no'];
+         $res = db_select('employee')->fields('employee',array('sl_no'))->condition('sl_no',$sl_no,'=')->execute();
+      if($res->rowCount()==0){
+    drupal_set_message("insert ".$res->rowCount());
+    $nid = db_insert('employee')
+  ->fields(array(
+    'firstname' => $firstname,
+    'lastname' => $lastname,
+    'gender' => $gender,
+    'address' => $address,
+    'designation' => $designation,
+  ))
+  ->execute();
+  
+}
+else{
+ drupal_set_message("update");
+$nid = db_update('employee')
+  ->fields(array(
+    'firstname' => $firstname,
+    'lastname' => $lastname,
+    'gender' => $gender,
+    'address' => $address,
+    'designation' => $designation,
+  ))
+  ->condition('sl_no',$sl_no,'=')
+  ->execute();
+}
+
+
+	drupal_set_message(t('The form has been submitted.'.$firstname));
+}
+
+
+
+
+
+
+function colour_set_simple_view()
+{
+drupal_set_message("data shows");
+
+$result = db_select('employee')->fields('employee', array('firstname', 'lastname','gender','address','designation','sl_no'))->execute()->fetchAll();
+$options = array();
+$getvalue='';
+$getvalue.='<table border="2" style= "background-color: #84ed86; color: #761a9b; margin: 0 auto;" >
+      <thead>
+        <tr>
+          
+          <th>firstname</th>
+          <th>lastname</th>
+          <th>gender</th>
+          <th>address</th>
+          <th>designation</th>
+          <th>update</th>
+          <th>delete</th>
+                 
+        </tr>
+      </thead>';
+
+foreach ($result as $value) {
+  $options[$value->firstname] = $value->firstname;
+ 
+  $options[$value->lastname] = $value->lastname;
+  if($value->gender==0)
+  $vl="male";
+  else if($value->gender==1)
+  $vl="female";
+  else
+  $vl="others";
+  
+if($value->designation==1)
+  $di="Programer";
+  else if($value->designation==2)
+  $di="Database_Admin";
+  else if($value->designation==3)
+  $di="Testing"; 
+
+  else if($value->designation==4)
+  $di="Team_leader";  
+  else if ($value->designation==5)
+  $di="Manager";
+  
+
+  
+  $getvalue.="<tr>
+              <td>{$value->firstname}</td>
+              <td>{$value->lastname}</td>
+              <td>{$vl}</td>                                //$vl repersent values of gender
+              
+              <td>{$value->address}</td>
+              <td>{$di}</td>								//$di repersend Designation
+              <td> <a href='examples/{$value->sl_no}'>edit</a></td>
+              <td> <a href='del/{$value->sl_no}'>delete</a></td>
+              
+            </tr>";
+}
+
+$getvalue.='</table>';
+
+return $getvalue;
+
+}
+
+
+function colour_set_simple_form($form, &$form_submit) {
+
+
+$getvalue = $_GET['q'];
+$param = explode('/',$getvalue);
+$param = $param[2];
+//drupal_set_message($param);
+
+$result = db_select('employee')-> fields('employee', array('firstname', 'lastname','gender','address','designation','sl_no'))->condition('sl_no',  $param,'=')->execute();
+
+
+if($result->rowCount()!=0){
+
+foreach($result as $res){
+ $form['firstname'] = array( 
+    '#type' => 'textfield', 
+    '#title' => t('Enter Frist Name'),
+    '#required' => TRUE, 
+    '#default_value' =>$res->firstname,
+  );
+
+$form['lastname'] = array( 
+    '#type' => 'textfield', 
+    '#title' => t('Enter Last name'),
+    '#required' => TRUE,
+    '#default_value' =>$res->lastname,
+  );
+  
+  $form['dob'] = array( 
+    '#type' => 'date', 
+    '#title' => t('Enter you Date of Birth '),
+    '#required' => TRUE, 
+  '#default_value' =>$res->dob,
+  );
+  
+ $gender = array(0 => t('Male'), 1 => t('Female'));
+ $form['gender'] = array(
+    '#type' => 'radios',
+    '#title' => t('gender'),
+    '#options' => $gender,
+  '#default_value' =>$res->gender,
+);
+
+ $designation = array(0 => ('Select your designation'),1=>t('Programer'), 
+													   2 => t('Database_Admin'), 
+													   3 =>t('Testing'), 
+													   4 =>t('Team_leader'),
+													   5 => t('Manager'));
+ $form['designation'] = array(
+    '#type' => 'select',
+    '#title' => t('designation'),
+    '#options' => $designation,
+   '#default_value' =>$res->designation,
+);
+ 
+$form['address'] = array( 
+    '#type' => 'textfield', 
+    '#title' => t('Enter Address of employee'),
+    '#required' => TRUE, 
+   '#default_value' =>$res->address,
+  );
+  $form['sl_no'] = array( 
+    '#type' => 'hidden', 
+    '#title' => t('Enter Address of employee'),
+    '#required' => TRUE, 
+   '#default_value' =>$res->sl_no,
+  );
+  $form['submit_form'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+  );
+}
+}
+else{
+$form['firstname'] = array( 
+    '#type' => 'textfield', 
+    '#title' => t('Enter Frist Name'),
+    '#required' => TRUE, 
+  );
+
+$form['lastname'] = array( 
+    '#type' => 'textfield', 
+    '#title' => t('Enter Last name'),
+    '#required' => TRUE,
+  );
+  
+  $form['dob'] = array( 
+    '#type' => 'date', 
+    '#title' => t('Enter you Date of Birth '),
+    '#required' => TRUE, 
+  );
+  
+ $gender = array(0 => t('Male'), 1 => t('Female'));
+ $form['gender'] = array(
+    '#type' => 'radios',
+    '#title' => t('gender'),
+    '#options' => $gender,
+);
+
+ $designation = array(0 => ('Select your designation'),1=>t('Programer'), 
+													   2 => t('Database_Admin'), 
+													   3 =>t('Testing'), 
+													   4 =>t('Team_leader'),t('Manager'));
+ $form['designation'] = array(
+    '#type' => 'select',
+    '#title' => t('designation'),
+    '#options' => $designation,
+);
+ 
+$form['address'] = array( 
+    '#type' => 'textfield', 
+    '#title' => t('Enter Address of employee'),
+    '#required' => TRUE, 
+  );
+  
+ /* $form['image'] = array(
+    '#type' => 'managed_file',
+    '#name' => 'name_image',
+    '#title' => t('Profile image for employee'),
+    '#upload_location' => 'desktop'
+  );*/
+  $form['submit_form'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+  );
+  
+}
+  
+return $form;
+}
+
+
+
+
+										
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,30 @@
+
+<?php
+function user_login_block($form) {
+  $form['#action'] = url(current_path(), array('query' => drupal_get_destination(), 'external' => FALSE));
+  $form['#id'] = 'user-login-form';
+  $form['#validate'] = user_login_default_validators();
+  $form['#submit'][] = 'user_login_submit';
+  $form['name'] = array('#type' => 'textfield',
+    '#title' => t('Username'),
+    '#maxlength' => USERNAME_MAX_LENGTH,
+    '#size' => 15,
+    '#required' => TRUE,
+  );
+  $form['pass'] = array('#type' => 'password',
+    '#title' => t('Password'),
+    '#size' => 15,
+    '#required' => TRUE,
+  );
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array('#type' => 'submit',
+    '#value' => t('Log in'),
+  );
+  $items = array();
+  if (variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL)) {
+    $items[] = l(t('Create new account'), 'user/register', array('attributes' => array('title' => t('Create a new user account.'))));
+  }
+  $items[] = l(t('Request new password'), 'user/password', array('attributes' => array('title' => t('Request new password via e-mail.'))));
+  $form['links'] = array('#markup' => theme('item_list', array('items' => $items)));
+  return $form;
+}

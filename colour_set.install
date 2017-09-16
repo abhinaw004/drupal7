@@ -1,0 +1,46 @@
+<?php
+
+function colour_set_schema() {
+  $schema['Colour_set'] = array(
+    'description' => 'The base table for Employee.',
+    'fields' => array(
+      'cid' => array(
+        'description' => 'creating simple employee id .',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+
+      'Name' => array(
+        'description' => 'Enter your name.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'Designation' => array(
+        'description' => 'Select your Designation.',
+        'type' => 'varchar',
+        'length' => 30,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'Gender' => array(
+        'description' => 'Please select your gender.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'Address' => array(
+        'description' => 'Address of Employee',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+
+);
+  return $schema;
+}
